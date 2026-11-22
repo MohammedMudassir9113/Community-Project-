@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sri Siddhartha School Of Engineering - Tic Tac Toe</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Import: Inter, Outfit, Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .font-poppins {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Clean Classic Card Styling */
+        .card-panel {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Cell Tile Buttons */
+        .cell-btn {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .cell-btn:hover:not(:disabled) {
+            border-color: #6366f1;
+            background-color: #334155;
+            transform: translateY(-2px);
+        }
+
+        .cell-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Pulsing Winner Highlight */
+        @keyframes highlightPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        .win-cell {
+            animation: highlightPulse 1.2s infinite ease-in-out;
+            background-color: #1e1b4b !important;
+            border-color: #818cf8 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-4 md:p-8 text-slate-100">
+
+    <header class="w-full max-w-3xl flex flex-col items-center gap-4 text-center">
+        <!-- College Banner -->
+        <div class="w-full card-panel py-3.5 px-6 rounded-2xl border-indigo-500/30 flex items-center justify-center gap-3 bg-slate-900/90 shadow-lg">
+            <i class="fa-solid fa-graduation-cap text-indigo-400 text-xl md:text-2xl"></i>
+            <h2 class="font-poppins font-bold text-sm sm:text-base md:text-lg tracking-wide text-indigo-200">
+                SRI SIDDHARTHA SCHOOL OF ENGINEERING
+            </h2>
+        </div>
+
+        <!-- Classic Game Title -->
+        <div class="flex flex-col items-center mt-1">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-hashtag text-indigo-400 text-3xl md:text-4xl"></i>
+                <h1 class="font-outfit text-3xl md:text-5xl font-extrabold tracking-tight text-white">
+                    TIC TAC TOE
+                </h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-xl flex flex-col items-center gap-5 my-6 flex-grow justify-center">
+
+        <!-- Controls Bar: Game Mode & Symbol Picker -->
+        <div class="card-panel w-full p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-center">
+            <!-- Mode Selection -->
+            <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700 w-full sm:w-auto">
+                <button id="mode-pvp" onclick="setGameMode('PVP')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all bg-indigo-600 text-white shadow-md">
+                    <i class="fa-solid fa-users mr-1.5"></i> 2 Players
+                </button>
+                <button id="mode-ai" onclick="setGameMode('AI')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-robot mr-1.5"></i> vs Computer
+                </button>
+            </div>
+
+            <!-- Symbol Selection (X or O) -->
+            <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700 w-full sm:w-auto justify-between sm:justify-start">
+                <span class="font-poppins text-xs font-semibold text-slate-400 uppercase px-2">Your Symbol:</span>
+                <div class="flex gap-1.5">
+                    <button id="symbol-x" onclick="setPlayerSymbol('X')" class="px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all bg-indigo-500/20 text-indigo-300 border border-indigo-500 shadow-sm">
+                        X
+                    </button>
+                    <button id="symbol-o" onclick="setPlayerSymbol('O')" class="px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all text-slate-300 hover:text-white">
+                        O
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="grid grid-cols-3 gap-3 w-full text-center">
+            <div class="card-panel p-3.5 rounded-xl border-t-4 border-indigo-500">
+                <p id="player1-label" class="font-poppins text-xs md:text-sm font-semibold text-indigo-300 uppercase">P1 (X)</p>
+                <p id="score-p1" class="font-outfit text-2xl md:text-3xl font-bold text-white mt-0.5">0</p>
+            </div>
+            <div class="card-panel p-3.5 rounded-xl border-t-4 border-slate-500">
+                <p class="font-poppins text-xs md:text-sm font-semibold text-slate-300 uppercase">TIES</p>
+                <p id="score-draws" class="font-outfit text-2xl md:text-3xl font-bold text-white mt-0.5">0</p>
+            </div>
+            <div class="card-panel p-3.5 rounded-xl border-t-4 border-rose-500">
+                <p id="player2-label" class="font-poppins text-xs md:text-sm font-semibold text-rose-300 uppercase">P2 (O)</p>
+                <p id="score-p2" class="font-outfit text-2xl md:text-3xl font-bold text-white mt-0.5">0</p>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="card-panel w-full py-3.5 px-6 rounded-xl flex justify-between items-center border-slate-700">
+            <div class="flex items-center gap-3">
+                <span id="status-indicator" class="h-3 w-3 rounded-full bg-indigo-400"></span>
+                <span id="status-text" class="font-poppins text-sm md:text-base font-semibold text-slate-200">
+                    Player X's Turn
+                </span>
+            </div>
+            <span class="font-inter text-xs text-slate-400 font-medium uppercase tracking-wider">Classic Mode</span>
+        </div>
+
+        <!-- 3x3 Classic Game Grid -->
+        <div class="w-full aspect-square max-w-[360px] md:max-w-[380px]">
+            <div id="board" class="grid grid-cols-3 gap-3 w-full h-full card-panel p-3.5 rounded-2xl border-slate-700">
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(0)" data-index="0"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(1)" data-index="1"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(2)" data-index="2"></button>
+
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(3)" data-index="3"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(4)" data-index="4"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(5)" data-index="5"></button>
+
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(6)" data-index="6"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(7)" data-index="7"></button>
+                <button class="cell-btn rounded-xl flex items-center justify-center text-4xl md:text-5xl font-outfit" onclick="handleCellClick(8)" data-index="8"></button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 w-full">
+            <button onclick="resetBoard()" class="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-poppins text-xs md:text-sm font-semibold text-white tracking-wide shadow-md transition active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-rotate-right"></i> Next Round
+            </button>
+            <button onclick="fullReset()" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl font-poppins text-xs md:text-sm font-semibold text-slate-300 hover:text-white tracking-wide transition active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrows-rotate"></i> Reset Score
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-3xl mt-4">
+        <div class="card-panel p-5 rounded-2xl border-slate-700 bg-slate-900/90">
+            <!-- Footer Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center border-b border-slate-800 pb-3 mb-4 gap-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-users text-indigo-400"></i>
+                    <h2 class="font-poppins font-bold text-base text-white">TEAM STAR SPACE</h2>
+                </div>
+                <div class="font-inter text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-indigo-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-graduation-cap text-indigo-400"></i> Sri Siddhartha School Of Engineering
+                </div>
+            </div>
+
+            <!-- Team Members Info Grid (5 Members) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Member 1 -->
+                <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="font-poppins text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Member 1</p>
+                        <h3 class="font-semibold text-xs text-slate-100">Mohammed Mudassir</h3>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 shrink-0">
+                        1HM25CR046
+                    </span>
+                </div>
+
+                <!-- Member 2 -->
+                <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="font-poppins text-[10px] font-bold text-rose-400 uppercase tracking-wider">Member 2</p>
+                        <h3 class="font-semibold text-xs text-slate-100">M Jawaz Pasha</h3>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-rose-950/80 border border-rose-500/40 text-rose-300 shrink-0">
+                        1HM25CR036
+                    </span>
+                </div>
+
+                <!-- Member 3 -->
+                <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="font-poppins text-[10px] font-bold text-amber-400 uppercase tracking-wider">Member 3</p>
+                        <h3 class="font-semibold text-xs text-slate-100">Nanditha</h3>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/40 text-amber-300 shrink-0">
+                        1HM25CR055
+                    </span>
+                </div>
+
+                <!-- Member 4 -->
+                <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="font-poppins text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Member 4</p>
+                        <h3 class="font-semibold text-xs text-slate-100">Chaithanya</h3>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 shrink-0">
+                        1HM25CR017
+                    </span>
+                </div>
+
+                <!-- Member 5 -->
+                <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="font-poppins text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Member 5</p>
+                        <h3 class="font-semibold text-xs text-slate-100">Chaitra</h3>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 shrink-0">
+                        1HM25CR019
+                    </span>
+                </div>
+            </div>
+
+            <!-- Copyright line -->
+            <div class="flex justify-between items-center text-xs text-slate-400 pt-3 mt-3 border-t border-slate-800/80 font-inter">
+                <p>Sri Siddhartha School Of Engineering</p>
+                <p>© Team Star Space</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Game Logic Variables
+        let boardState = Array(9).fill('');
+        let player1Symbol = 'X';
+        let player2Symbol = 'O';
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let gameMode = 'PVP'; // 'PVP' or 'AI'
+
+        let scores = { P1: 0, P2: 0, draws: 0 };
+
+        const WINNING_COMBOS = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function setPlayerSymbol(symbol) {
+            if (player1Symbol === symbol) return;
+
+            player1Symbol = symbol;
+            player2Symbol = symbol === 'X' ? 'O' : 'X';
+
+            const btnX = document.getElementById('symbol-x');
+            const btnO = document.getElementById('symbol-o');
+
+            if (symbol === 'X') {
+                btnX.className = "px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all bg-indigo-500/20 text-indigo-300 border border-indigo-500 shadow-sm";
+                btnO.className = "px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all text-slate-300 hover:text-white";
+            } else {
+                btnO.className = "px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all bg-rose-500/20 text-rose-300 border border-rose-500 shadow-sm";
+                btnX.className = "px-4 py-1.5 rounded-lg font-poppins text-xs font-bold transition-all text-slate-300 hover:text-white";
+            }
+
+            updateLabels();
+            fullReset();
+        }
+
+        function updateLabels() {
+            const p1Label = document.getElementById('player1-label');
+            const p2Label = document.getElementById('player2-label');
+
+            p1Label.innerText = `P1 (${player1Symbol})`;
+            if (gameMode === 'AI') {
+                p2Label.innerText = `Computer (${player2Symbol})`;
+            } else {
+                p2Label.innerText = `P2 (${player2Symbol})`;
+            }
+        }
+
+        function handleCellClick(index) {
+            if (boardState[index] !== '' || !gameActive) return;
+
+            makeMove(index, currentPlayer);
+
+            if (gameActive && gameMode === 'AI' && currentPlayer === player2Symbol) {
+                gameActive = false;
+                setTimeout(() => {
+                    gameActive = true;
+                    aiTurn();
+                }, 300);
+            }
+        }
+
+        function makeMove(index, symbol) {
+            boardState[index] = symbol;
+            const cellBtn = document.querySelector(`[data-index='${index}']`);
+            
+            if (symbol === 'X') {
+                cellBtn.innerHTML = `<span class="text-indigo-400 font-extrabold">X</span>`;
+            } else {
+                cellBtn.innerHTML = `<span class="text-rose-400 font-extrabold">O</span>`;
+            }
+            cellBtn.disabled = true;
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            let winningCombo = null;
+
+            for (let combo of WINNING_COMBOS) {
+                const [a, b, c] = combo;
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    roundWon = true;
+                    winningCombo = combo;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                gameActive = false;
+                highlightWinningCells(winningCombo);
+
+                if (currentPlayer === player1Symbol) {
+                    scores.P1++;
+                } else {
+                    scores.P2++;
+                }
+                updateScoreboard();
+
+                let winnerText = "";
+                if (gameMode === 'AI') {
+                    winnerText = (currentPlayer === player1Symbol) ? "Player Wins!" : "Computer Wins!";
+                } else {
+                    winnerText = (currentPlayer === player1Symbol) ? "Player 1 Wins!" : "Player 2 Wins!";
+                }
+
+                updateStatus(`${winnerText} (${currentPlayer})`, true);
+                return;
+            }
+
+            if (!boardState.includes('')) {
+                gameActive = false;
+                scores.draws++;
+                updateScoreboard();
+                updateStatus("Game Draw / Tie!", false);
+                return;
+            }
+
+            // Switch Player Turn
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            
+            let turnText = "";
+            if (gameMode === 'AI' && currentPlayer === player2Symbol) {
+                turnText = "Computer Thinking...";
+            } else {
+                turnText = `Player ${currentPlayer}'s Turn`;
+            }
+            
+            updateStatus(turnText, false);
+        }
+
+        function highlightWinningCells(combo) {
+            combo.forEach(idx => {
+                const btn = document.querySelector(`[data-index='${idx}']`);
+                btn.classList.add('win-cell');
+            });
+        }
+
+        function updateStatus(message, isWin) {
+            const statusText = document.getElementById('status-text');
+            const statusIndicator = document.getElementById('status-indicator');
+
+            statusText.innerText = message;
+
+            if (isWin) {
+                statusText.className = "font-poppins text-sm md:text-base font-bold text-emerald-400";
+                statusIndicator.className = "h-3 w-3 rounded-full bg-emerald-400";
+            } else {
+                const isX = currentPlayer === 'X';
+                statusText.className = `font-poppins text-sm md:text-base font-semibold ${isX ? 'text-indigo-300' : 'text-rose-300'}`;
+                statusIndicator.className = `h-3 w-3 rounded-full ${isX ? 'bg-indigo-400' : 'bg-rose-400'}`;
+            }
+        }
+
+        function updateScoreboard() {
+            document.getElementById('score-p1').innerText = scores.P1;
+            document.getElementById('score-p2').innerText = scores.P2;
+            document.getElementById('score-draws').innerText = scores.draws;
+        }
+
+        // Minimax AI Decision Logic
+        function aiTurn() {
+            if (!gameActive) return;
+
+            let bestScore = -Infinity;
+            let move = null;
+
+            for (let i = 0; i < 9; i++) {
+                if (boardState[i] === '') {
+                    boardState[i] = player2Symbol;
+                    let score = minimax(boardState, 0, false);
+                    boardState[i] = '';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+
+            if (move !== null) {
+                makeMove(move, player2Symbol);
+            }
+        }
+
+        function minimax(board, depth, isMaximizing) {
+            let winner = checkSimulatedWinner(board);
+            if (winner !== null) {
+                if (winner === player2Symbol) return 10 - depth;
+                if (winner === player1Symbol) return depth - 10;
+                return 0;
+            }
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === '') {
+                        board[i] = player2Symbol;
+                        let score = minimax(board, depth + 1, false);
+                        board[i] = '';
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === '') {
+                        board[i] = player1Symbol;
+                        let score = minimax(board, depth + 1, true);
+                        board[i] = '';
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+        function checkSimulatedWinner(board) {
+            for (let combo of WINNING_COMBOS) {
+                const [a, b, c] = combo;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+            if (!board.includes('')) return 'draw';
+            return null;
+        }
+
+        function setGameMode(mode) {
+            gameMode = mode;
+            const pvpBtn = document.getElementById('mode-pvp');
+            const aiBtn = document.getElementById('mode-ai');
+
+            if (mode === 'PVP') {
+                pvpBtn.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all bg-indigo-600 text-white shadow-md";
+                aiBtn.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all text-slate-300 hover:text-white";
+            } else {
+                aiBtn.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all bg-indigo-600 text-white shadow-md";
+                pvpBtn.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg font-poppins text-xs font-semibold transition-all text-slate-300 hover:text-white";
+            }
+
+            updateLabels();
+            fullReset();
+        }
+
+        function resetBoard() {
+            boardState = Array(9).fill('');
+            currentPlayer = 'X';
+            gameActive = true;
+
+            document.querySelectorAll('.cell-btn').forEach(btn => {
+                btn.innerHTML = '';
+                btn.disabled = false;
+                btn.classList.remove('win-cell');
+            });
+
+            updateStatus("Player X's Turn", false);
+
+            if (gameMode === 'AI' && player1Symbol === 'O') {
+                gameActive = false;
+                setTimeout(() => {
+                    gameActive = true;
+                    aiTurn();
+                }, 300);
+            }
+        }
+
+        function fullReset() {
+            scores = { P1: 0, P2: 0, draws: 0 };
+            updateScoreboard();
+            resetBoard();
+        }
+    </script>
+</body>
+</html>
